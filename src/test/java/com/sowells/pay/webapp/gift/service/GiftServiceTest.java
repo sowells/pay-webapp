@@ -3,7 +3,6 @@ package com.sowells.pay.webapp.gift.service;
 import com.sowells.pay.webapp.PayWebApplication;
 import com.sowells.pay.webapp.gift.constant.Errors;
 import com.sowells.pay.webapp.gift.domain.GiftInfoResponse;
-import com.sowells.pay.webapp.gift.entity.GiftHistory;
 import com.sowells.pay.webapp.gift.entity.GiftOrder;
 import com.sowells.pay.webapp.gift.exception.BadRequestException;
 import com.sowells.pay.webapp.gift.exception.InternalException;
@@ -42,7 +41,6 @@ class GiftServiceTest {
 
   @BeforeEach
   void setUp() {
-
   }
 
   // 생성 - 정상 케이스

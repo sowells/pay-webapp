@@ -10,13 +10,13 @@ import java.util.List;
 
 @Data
 @Entity
-@Table(name = "t_gift_order")
+@Table(name = "t_gift_order", uniqueConstraints=@UniqueConstraint(columnNames={"roomId", "token"}))
 public class GiftOrder {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private String requestId;
-  private String token;
   private String roomId;
+  private String token;
   private long totalAmount;
   private int maxNumOfRecipients;
   private long creatorId;

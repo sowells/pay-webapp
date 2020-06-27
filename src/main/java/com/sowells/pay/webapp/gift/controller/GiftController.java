@@ -4,7 +4,6 @@ import com.sowells.pay.webapp.gift.domain.GiftCreationRequest;
 import com.sowells.pay.webapp.gift.domain.GiftInfoResponse;
 import com.sowells.pay.webapp.gift.service.GiftService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController

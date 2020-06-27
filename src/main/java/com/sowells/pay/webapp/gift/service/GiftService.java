@@ -12,14 +12,12 @@ import com.sowells.pay.webapp.gift.repository.GiftOrderRepository;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.RandomUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.Transient;
-import javax.transaction.Transactional;
 import javax.validation.constraints.Positive;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -60,34 +58,34 @@ public class GiftService {
    * @param maxNumOfReceivers 뿌릴 인원
    * @return 뿌리기 요청건에 발급된 고유 token (RoomId내에서 고유하다)
    */
-  @Transactional
-  // TODO : isolation level 설정
+  @Transactional(isolation = Isolation.SERIALIZABLE) // 가용 토큰 조회 ~ 데이터 저장 사이의 Phantom Read 방지
   public String add(@Positive long userId, @NonNull String roomId, @Positive long totalAmount, @Positive int maxNumOfReceivers) {
     String params = String.format(" userId: %d, roomId: %s", userId, roomId);
     if(totalAmount <= 0 || maxNumOfReceivers <= 0) throw new BadRequestException(Errors.MUST_BE_POSITIVE.getMessage()+params); // 금액과 인원 모두 양수여야 한다.
     if(totalAmount < maxNumOfReceivers) throw new BadRequestException(Errors.AMOUNT_MUST_GREATER_THAN_RECEIVERS.getMessage()+params); // 인원 수 보다 많은 금액을 입력해야 한다.
 
-    String token = createToken(roomId);
+
     Timestamp expirationTime = new Timestamp(System.currentTimeMillis()+EXPIRE_DURATION);
-    GiftOrder req = new GiftOrder();
-    req.setRoomId(roomId);
-    req.setTotalAmount(totalAmount);
-    req.setMaxNumOfRecipients(maxNumOfReceivers);
-    req.setToken(token);
-    req.setCreatorId(userId);
-    req.setExpirationTime(expirationTime);
-    orderRepository.save(req);
+    String token = createToken(roomId);
+    GiftOrder order = new GiftOrder();
+    order.setToken(token);
+    order.setRoomId(roomId);
+    order.setTotalAmount(totalAmount);
+    order.setMaxNumOfRecipients(maxNumOfReceivers);
+    order.setCreatorId(userId);
+    order.setExpirationTime(expirationTime);
+    orderRepository.save(order);
 
     // 금액 분배하기
     MoneyDivider divider = new MoneyDivider(totalAmount, maxNumOfReceivers);
     for(int i = 0; i < maxNumOfReceivers; i++) {
       GiftHistory history = new GiftHistory();
-      history.setRequestId(req.getRequestId());
+      history.setRequestId(order.getRequestId());
       history.setAmount(divider.next());
       historyRepository.save(history);
     }
 
-    return token;
+    return order.getToken();
   }
 
   protected String createToken(String roomId) {
